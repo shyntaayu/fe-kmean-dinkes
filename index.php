@@ -14,7 +14,12 @@ set_exception_handler("ErrorHandler::handleException");
 
 header("Content-type:application/json; charset=UTF-8");
 
-$parts = explode("/", $_SERVER["REQUEST_URI"]);
+// $parts = explode("/", $_SERVER["REQUEST_URI"]);
+// var_dump($parts);
+$uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);
+// var_dump($uri_parts[0]);
+$parts = explode("/", $uri_parts[0]);
+
 if ($parts[3] == "daerah" || $parts[3] == "penyakit" || $parts[3] == "main") {
 } else {
     http_response_code(404);
@@ -23,6 +28,7 @@ if ($parts[3] == "daerah" || $parts[3] == "penyakit" || $parts[3] == "main") {
 
 $route = $parts[3] ?? null;
 $id = $parts[4] ?? null;
+$param = $_GET;
 
 $database = new Database("localhost", "dinkes", "root", "");
 $database->getConnection();
@@ -47,7 +53,7 @@ switch ($route) {
         $gatewayMain = new MainGateway($database);
 
         $controllerMain = new MainController($gatewayMain);
-        $controllerMain->processRequest($_SERVER["REQUEST_METHOD"], $id);
+        $controllerMain->processRequest($_SERVER["REQUEST_METHOD"], $id, $param);
 
         break;
 }

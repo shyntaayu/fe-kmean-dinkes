@@ -4,26 +4,27 @@ class MainController
     public function __construct(private MainGateway $gateway)
     {
     }
-    public function processRequest(string $method, ?string $id): void
+    public function processRequest(string $method, ?string $id, ?array $param): void
     {
         if ($id) {
             $this->processResourceRequest($method, $id);
         } else {
-            $this->processCollectionRequest($method);
+            $this->processCollectionRequest($method, $param);
         }
     }
 
     private function processResourceRequest(string $method, string $id): void
     {
         $main = $this->gateway->get($id);
-        if (!$main) {
-            http_response_code(404);
-            echo json_encode(["message" => "Main not found"]);
-            return;
-        }
+        // if (!$main) {
+        //     http_response_code(404);
+        //     echo json_encode(["message" => "Main not found"]);
+        //     return;
+        // }
         switch ($method) {
             case "GET":
-                echo json_encode($main);
+                // echo json_encode($main);
+                $this->trial_Main();
                 break;
             case "POST":
                 $data = $_POST;
@@ -47,11 +48,15 @@ class MainController
                 header("Allow: GET, POST,  DELETE");
         }
     }
-    private function processCollectionRequest(string $method): void
+    private function processCollectionRequest(string $method, array $param): void
     {
+        $daerahName = $_GET['daerah_name'] ?? null;
+        $penyakitName = $_GET['penyakit_name'] ?? null;
+        $tahun = $_GET['tahun'] ?? null;
         switch ($method) {
             case "GET":
-                echo json_encode($this->gateway->getAll());
+                $data = $this->gateway->getDataByParams($daerahName, $penyakitName, $tahun);
+                echo json_encode($data);
                 break;
             case "POST":
 
@@ -67,7 +72,7 @@ class MainController
                         echo json_encode(array('message' => 'Data created successfully.', 'data' => $result['insertedData']));
                     } else {
                         http_response_code(500); // Internal Server Error
-                        echo json_encode(array('message' => 'Error processing the Excel file.'));
+                        echo json_encode(array('message' => 'Error processing the Excel file.', 'error' => $result['message']));
                     }
                 } else {
                     http_response_code(400); // Bad Request
@@ -94,5 +99,34 @@ class MainController
             }
         }
         return $errors;
+    }
+
+    private function trial_Main()
+    {
+        $data = [
+            [2, 10],
+            [2, 5],
+            [8, 4],
+            [5, 8],
+            [7, 5],
+            [6, 4],
+            [1, 2],
+            [4, 9]
+        ];
+
+        $k = 2; // Number of clusters
+        $maxIterations = 100;
+
+        $kmeans = new KMeans($k, $maxIterations);
+        $clusters = $kmeans->fit($data);
+
+        // Output the resulting clusters
+        foreach ($clusters as $clusterIndex => $cluster) {
+            echo "Cluster " . ($clusterIndex + 1) . ": ";
+            foreach ($cluster as $point) {
+                echo "[" . implode(", ", $point) . "] ";
+            }
+            echo PHP_EOL;
+        }
     }
 }
