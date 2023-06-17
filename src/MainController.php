@@ -53,9 +53,12 @@ class MainController
         $daerahName = $_GET['daerah_name'] ?? null;
         $penyakitName = $_GET['penyakit_name'] ?? null;
         $tahun = $_GET['tahun'] ?? null;
+        $pilihan = $_GET['pilihan'] ?? null;
+        $baris = $_GET['baris'] ?? null;
+        $kolom = $_GET['kolom'] ?? null;
         switch ($method) {
             case "GET":
-                $data = $this->gateway->getDataByParams($daerahName, $penyakitName, $tahun);
+                $data = $this->gateway->getDataByParams($daerahName, $penyakitName, $tahun, $pilihan, $baris, $kolom);
                 echo json_encode($data);
                 break;
             case "POST":

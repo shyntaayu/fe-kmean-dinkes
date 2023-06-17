@@ -112,7 +112,7 @@ class MainGateway
         return $stmt->rowCount();
     }
 
-    public function getDataByParams($daerahNameP, $penyakitNameP, $tahunP)
+    public function getDataByParams($daerahNameP, $penyakitNameP, $tahunP, $pilihanP, $barisP, $kolomP)
     {
         try {
             $query = "SELECT dp.*, p.penyakit_name, d.daerah_name 
@@ -146,85 +146,87 @@ class MainGateway
 
             // Perform any additional processing or return the results as needed
 
-            // Perform restructuring of data
-            // Create an empty result array
-            $restructuredData = [];
+            $pilihan = $this->getPilihan($pilihanP);
+            $baris = $this->getPilihan($barisP);
+            $kolom = $this->getPilihan($kolomP);
 
-            // Restructure the data
-            foreach ($results as $row) {
-                $penyakitName = $row['penyakit_name'];
-                $daerahName = $row['daerah_name'];
-                $tahun = $row['tahun'];
-                $jumlah = $row['jumlah'];
-
-                // Check if penyakit exists in the result array
-                if (!isset($restructuredData[$penyakitName])) {
-                    $restructuredData[$penyakitName] = [
-                        'penyakit_name' => $penyakitName,
-                        'list_daerah' => []
-                    ];
-                }
-
-                // Check if daerah exists in the list_daerah
-                $daerahExists = false;
-                foreach ($restructuredData[$penyakitName]['list_daerah'] as &$daerah) {
-                    if ($daerah['daerah_name'] === $daerahName) {
-                        $daerahExists = true;
-                        $daerah['list_tahun'][] = [
-                            'tahun' => $tahun,
-                            'jumlah' => $jumlah
-                        ];
-                        break;
-                    }
-                }
-
-                // If daerah does not exist, add it to the list_daerah
-                if (!$daerahExists) {
-                    $restructuredData[$penyakitName]['list_daerah'][] = [
-                        'daerah_name' => $daerahName,
-                        'list_tahun' => [
-                            [
-                                'tahun' => $tahun,
-                                'jumlah' => $jumlah
-                            ]
-                        ]
-                    ];
-                }
-            }
-
-            // Convert the associative array to indexed array
-            $restructuredData = array_values($restructuredData);
-
-            // Return the restructured data
-            return $restructuredData;
-
-            // $filteredData = [];
-            // $targetDaerah = $daerahNameP; // The daerah to filter by
-
-            // // Iterate over each penyakit
-            // foreach ($restructuredData as $penyakit) {
-            //     $filteredDaerahList = [];
-
-            //     // Iterate over each daerah in the list_daerah
-            //     foreach ($penyakit['list_daerah'] as $daerah) {
-            //         if ($daerah['daerah_name'] === $targetDaerah) {
-            //             // Add the matching daerah to the filtered list
-            //             $filteredDaerahList[] = $daerah;
-            //         }
-            //     }
-
-            //     // Only add penyakit that has matching daerah to the filtered data
-            //     if (!empty($filteredDaerahList)) {
-            //         $penyakit['list_daerah'] = $filteredDaerahList;
-            //         $filteredData[] = $penyakit;
-            //     }
-            // }
-
-            // // Return the filtered data
-            // return $filteredData;
+            return $this->getPenyakit($results, $pilihan, $baris, $kolom);
         } catch (PDOException $e) {
             // Handle the exception or return an error message
             return [];
         }
+    }
+
+    public function getPilihan($nama)
+    {
+        $hasil = "";
+        switch ($nama) {
+            case "daerah":
+                $hasil = "daerah_name";
+                break;
+            case "tahun":
+                $hasil = "tahun";
+                break;
+            case "penyakit":
+                $hasil = "penyakit_name";
+                break;
+        }
+        return $hasil;
+    }
+
+
+    public function getPenyakit($results, $pilihan, $baris, $kolom)
+    {
+        // Perform restructuring of data
+        // Create an empty result array
+        $restructuredData = [];
+
+        // Restructure the data
+        foreach ($results as $row) {
+            $penyakitName = $row[$pilihan];
+            $daerahName = $row[$baris];
+            $tahun = $row[$kolom];
+            $jumlah = $row['jumlah'];
+
+            // Check if penyakit exists in the result array
+            if (!isset($restructuredData[$penyakitName])) {
+                $restructuredData[$penyakitName] = [
+                    $pilihan => $penyakitName,
+                    'list_baris' => []
+                ];
+            }
+
+            // Check if daerah exists in the list_baris
+            $daerahExists = false;
+            foreach ($restructuredData[$penyakitName]['list_baris'] as &$daerah) {
+                if ($daerah[$baris] === $daerahName) {
+                    $daerahExists = true;
+                    $daerah['list_kolom'][] = [
+                        $kolom => $tahun,
+                        'jumlah' => $jumlah
+                    ];
+                    break;
+                }
+            }
+
+            // If daerah does not exist, add it to the list_baris
+            if (!$daerahExists) {
+                $restructuredData[$penyakitName]['list_baris'][] = [
+                    $baris => $daerahName,
+                    'list_kolom' => [
+                        [
+                            $kolom => $tahun,
+                            'jumlah' => $jumlah
+                        ]
+                    ]
+                ];
+            }
+        }
+
+        // Convert the associative array to indexed array
+        $restructuredData = array_values($restructuredData);
+
+        // Return the restructured data
+        return $restructuredData;
     }
 }
