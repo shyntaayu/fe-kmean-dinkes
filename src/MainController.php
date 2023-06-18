@@ -15,7 +15,7 @@ class MainController
 
     private function processResourceRequest(string $method, string $id): void
     {
-        $main = $this->gateway->get($id);
+        // $main = $this->gateway->get($id);
         // if (!$main) {
         //     http_response_code(404);
         //     echo json_encode(["message" => "Main not found"]);
@@ -36,8 +36,8 @@ class MainController
                     break;
                 }
 
-                $rows = $this->gateway->update($main, $_POST);
-                echo json_encode(["message" => "Main $id updated", "rows" => $rows]);
+                // $rows = $this->gateway->update($main, $_POST);
+                // echo json_encode(["message" => "Main $id updated", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
@@ -58,6 +58,14 @@ class MainController
         $kolom = $_GET['kolom'] ?? null;
         switch ($method) {
             case "GET":
+                $data = $_GET;
+                $errors = $this->getValidationErrors($data);
+
+                if (!empty($errors)) {
+                    http_response_code(422);
+                    echo json_encode(["errors" => $errors]);
+                    break;
+                }
                 $data = $this->gateway->getDataByParams($daerahName, $penyakitName, $tahun, $pilihan, $baris, $kolom);
                 echo json_encode($data);
                 break;
@@ -89,17 +97,18 @@ class MainController
         }
     }
 
-    private function getValidationErrors(array $data, bool $is_new = true): array
+    private function getValidationErrors(array $data): array
     {
         $errors = [];
-        if ($is_new && empty($data["main_name"])) {
-            $errors[] = "main_name is required";
+        if (empty($data["pilihan"])) {
+            $errors[] = "pilihan is required";
         }
 
-        if (array_key_exists("size", $data)) {
-            if (filter_var($data["size"], FILTER_VALIDATE_INT) === false) {
-                $errors[] = "main_size must be an integer";
-            }
+        if (empty($data["baris"])) {
+            $errors[] = "baris is required";
+        }
+        if (empty($data["kolom"])) {
+            $errors[] = "kolom is required";
         }
         return $errors;
     }

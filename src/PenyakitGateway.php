@@ -52,7 +52,7 @@ class PenyakitGateway
 
     public function delete(string $id): int
     {
-        $sql = "DELETE FROM penyakit WHERE penyakit_id = $:penyakit_id";
+        $sql = "DELETE FROM penyakit WHERE penyakit_id = :penyakit_id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue("penyakit_id", $id, PDO::PARAM_INT);
         $stmt->execute();

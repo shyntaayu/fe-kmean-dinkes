@@ -1,5 +1,5 @@
 <?php
-class DaerahGateway
+class JumlahGateway
 {
     private PDO $conn;
 
@@ -28,14 +28,45 @@ class DaerahGateway
         return $this->conn->lastInsertId();
     }
 
-    public function get(string $id): array|false
+    public function get(string $param, $tahun)
     {
-        $sql = "SELECT * FROM daerah WHERE daerah_id =:id";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+        // Prepare the SQL query
+        switch ($param) {
+            case "daerah":
+                $query = "SELECT COUNT(*) AS total_count FROM daerah";
+                break;
+            case "penyakit":
+                $query = "SELECT COUNT(*) AS total_count FROM penyakit";
+                break;
+            case "data":
+                $query = "SELECT COUNT(*) AS total_count FROM daerah_penyakit";
+                break;
+            case "penduduk":
+                $query = "SELECT SUM(jumlah) AS total_count
+                    FROM penduduk_daerah
+                    WHERE tahun = :tahun
+                    GROUP BY tahun";
+                break;
+            default:
+                return false;
+        }
+
+
+        // Execute the query
+        $stmt = $this->conn->prepare($query);
+        if ($param == "penduduk") {
+            $stmt->bindParam(':tahun', $tahun, PDO::PARAM_STR);
+        }
         $stmt->execute();
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $data;
+
+        // Fetch the result
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Get the total count
+        $totalCount = $result['total_count'];
+
+        // Return the count
+        return $totalCount;
     }
 
     public function update(array $current, array $new): int
