@@ -14,6 +14,8 @@ set_exception_handler("ErrorHandler::handleException");
 
 header("Content-type:application/json; charset=UTF-8");
 header('Access-Control-Allow-Origin: *');
+header("Access-Control-Allow-Methods:GET,POST,OPTIONS");
+header("Access-Control-Allow-Headers:Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
 
 // $parts = explode("/", $_SERVER["REQUEST_URI"]);
 // var_dump($parts);
