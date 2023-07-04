@@ -24,14 +24,25 @@ class MainController
         switch ($method) {
             case "GET":
                 // var_dump($inputData);
-                // $restructuredData = $this->getKMeans();
-                // echo json_encode($restructuredData);
+                $json = file_get_contents("php://input");
+                $data = $this->objectToArrayPHP($json);
+                $restructuredData = $this->prosesPrediksi($data);
+                echo json_encode($restructuredData);
                 break;
             case "POST":
-                $data = $_POST;
-                $json = file_get_contents("php://input");
-                $restructuredData = $this->getKMeans($json);
-                echo json_encode($restructuredData);
+                if ($id == "clustering") {
+                    $data = $_POST;
+                    $json = file_get_contents("php://input");
+                    $restructuredData = $this->getKMeans($json);
+                    $mapping = $this->mappingColor($restructuredData);
+                    // var_dump();
+                    echo json_encode($mapping);
+                } else if ($id == "prediksi") {
+                    $json = file_get_contents("php://input");
+                    $data = $this->objectToArrayPHP($json);
+                    $restructuredData = $this->prosesPrediksi($data);
+                    echo json_encode($restructuredData);
+                }
                 // $errors = $this->getValidationErrors($data, false);
 
                 // if (!empty($errors)) {
@@ -165,7 +176,6 @@ class MainController
             //     // Access other elements as needed
             // }
             $restructuredData = [];
-
             foreach ($result as $cluster => $clusterData) {
                 foreach ($clusterData as $index => $row) {
                     $restructuredRow = $row;
@@ -257,7 +267,6 @@ class MainController
 
             $centroids = $newCentroids;
         }
-
         return $clusters;
     }
 
@@ -265,5 +274,155 @@ class MainController
     {
         $data = json_decode($param, true);
         return $data;
+    }
+
+    function linearRegression($x, $y)
+    {
+        $n = count($x);
+        $xSum = array_sum($x);
+        $ySum = array_sum($y);
+        $xySum = 0;
+        $xSquaredSum = 0;
+        for ($i = 0; $i < $n; $i++) {
+            if ($x[$i] != 'daerah_name') {
+                $xySum += $x[$i] * $y[$i];
+                $xSquaredSum += $x[$i] * $x[$i];
+            }
+        }
+
+        $slope = ($n * $xySum - $xSum * $ySum) / ($n * $xSquaredSum - $xSum * $xSum);
+        $intercept = ($ySum - $slope * $xSum) / $n;
+
+        return [
+            'slope' => $slope,
+            'intercept' => $intercept,
+        ];
+    }
+
+    function prosesPrediksi($data)
+    {
+        // Extract the data points and years from the dataset
+        $dataPoints = [];
+        $years = [];
+
+        // Predict values for 2022 and 2023 for each dataset
+        foreach ($data as &$table) {
+            $years = array_keys($table);
+            $dataPoints = array_values($table);
+
+            $regression = $this->linearRegression($years, $dataPoints);
+            $prediction2022 = $regression['slope'] * 2022 + $regression['intercept'];
+            $prediction2023 = $regression['slope'] * 2023 + $regression['intercept'];
+            $prediction2024 = $regression['slope'] * 2024 + $regression['intercept'];
+            $prediction2025 = $regression['slope'] * 2025 + $regression['intercept'];
+            $prediction2026 = $regression['slope'] * 2026 + $regression['intercept'];
+
+            $table["2022"] = number_format($prediction2022, 2);
+            $table["2023"] = number_format($prediction2023, 2);
+            $table["2024"] = number_format($prediction2024, 2);
+            $table["2025"] = number_format($prediction2025, 2);
+            $table["2026"] = number_format($prediction2026, 2);
+        }
+
+        return $data;
+    }
+
+    function mappingColor($data)
+    {
+        $clusterLevels = [];
+        // var_dump($data);
+        // Iterate through each data point
+        $val1 = $this->findElementsByCluster($data, '0');
+        $val2 = $this->findElementsByCluster($data, '1');
+        $val3 = $this->findElementsByCluster($data, '2');
+        // var_dump($val1);
+        // var_dump($val2);
+        // var_dump($val3);
+        $all = [$val1, $val2, $val3];
+        // var_dump($all);
+        $conclusion = $this->calculateStats($all);
+        // echo json_encode($all);
+        foreach ($data as $point) {
+            $cluster = $point['cluster'];
+            $values = array_slice($point, 0, 5); // Get the values without "daerah_name" and "cluster"
+
+            // Calculate the average value
+            $averageValue = array_sum($values) / count($values);
+            // var_dump($averageValue);
+            // var_dump($cluster);
+
+            // Assign cluster level based on average value and threshold
+            if ($cluster == $conclusion["clusterMin"]) {
+                $clusterLevel = 'rendah';
+            } elseif ($cluster == $conclusion["clusterMax"]) {
+                $clusterLevel = 'tinggi';
+            } else {
+                $clusterLevel = 'sedang';
+            }
+
+
+            // Add the cluster level to the result
+            $point['clusterLevel'] = $clusterLevel;
+            // $clusterLevels[$cluster][] = $point;
+            $clusterLevels[] = $point;
+        }
+
+        return $clusterLevels;
+    }
+
+    function findElementsByCluster($data, $cluster)
+    {
+        $result = [];
+        $averageValue = 0;
+        foreach ($data as $item) {
+            if ($item['cluster'] == $cluster) {
+                $result[] = $item;
+                $values = array_slice($item, 0, 5); // Get the values without "daerah_name" and "cluster"
+
+                // Calculate the average value
+                $averageValue = array_sum($values) / count($values);
+            }
+        }
+
+        return [
+            'cluster' => $cluster,
+            'avg' => $averageValue,
+        ];
+    }
+
+    function calculateStats($data)
+    {
+        $result = [];
+
+        // Menginisialisasi nilai awal untuk min dan max
+        $min = PHP_INT_MAX;
+        $max = PHP_INT_MIN;
+        $clusterMin = null;
+        $clusterMax = null;
+
+        foreach ($data as $item) {
+            // Menghitung nilai min
+            if ($item['avg'] < $min) {
+                $min = $item['avg'];
+                $clusterMin = $item['cluster'];
+            }
+
+            // Menghitung nilai max
+            if ($item['avg'] > $max) {
+                $max = $item['avg'];
+                $clusterMax = $item['cluster'];
+            }
+        }
+
+        // Menghitung nilai rata-rata
+        $avg = array_sum(array_column($data, 'avg')) / count($data);
+
+        $result['avg'] = $avg;
+        $result['min'] = $min;
+        $result['max'] = $max;
+        $result["clusterMin"] = $clusterMin;
+        $result["clusterMax"] = $clusterMax;
+
+        return $result;
     }
 }
