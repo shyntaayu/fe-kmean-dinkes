@@ -23,7 +23,7 @@ $uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);
 // var_dump($uri_parts[0]);
 $parts = explode("/", $uri_parts[0]);
 
-if ($parts[3] == "daerah" || $parts[3] == "penyakit" || $parts[3] == "main" || $parts[3] == "penduduk" || $parts[3] == "jumlah") {
+if ($parts[3] == "daerah" || $parts[3] == "penyakit" || $parts[3] == "main" || $parts[3] == "penduduk" || $parts[3] == "jumlah" || $parts[3] == "tahun") {
 } else {
     http_response_code(404);
     exit;
@@ -67,5 +67,11 @@ switch ($route) {
 
         $controllerJumlah = new JumlahController($gatewayJumlah);
         $controllerJumlah->processRequest($_SERVER["REQUEST_METHOD"], $id);
+        break;
+    case "tahun":
+        $gatewayTahun = new TahunGateway($database);
+
+        $controllerTahun = new TahunController($gatewayTahun);
+        $controllerTahun->processRequest($_SERVER["REQUEST_METHOD"], $id);
         break;
 }
