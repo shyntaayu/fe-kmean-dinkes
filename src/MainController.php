@@ -317,7 +317,7 @@ class MainController
                 $average = $sum / $period;
 
                 $predictedValues[$year] = $average;
-                $item[$year] = number_format($average);
+                $item[$year] = (int)$average;
                 $values[] = $average;
             }
 
