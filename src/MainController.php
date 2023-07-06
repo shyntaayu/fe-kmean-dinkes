@@ -301,29 +301,28 @@ class MainController
 
     function prosesPrediksi($data)
     {
-        // Extract the data points and years from the dataset
-        $dataPoints = [];
-        $years = [];
+        // Predict values for 2022, 2023,dan 2024 menggunakan simple moving average
+        $yearsToPredict = [2022, 2023, 2024, 2025, 2026];
+        $period = 5;
 
-        // Predict values for 2022 and 2023 for each dataset
-        foreach ($data as &$table) {
-            $years = array_keys($table);
-            $dataPoints = array_values($table);
+        foreach ($data as &$item) {
+            $values = array_slice($item, 0, -1);
+            $values = array_values($values);
+            $predictedValues = [];
 
-            $regression = $this->linearRegression($years, $dataPoints);
-            $prediction2022 = $regression['slope'] * 2022 + $regression['intercept'];
-            $prediction2023 = $regression['slope'] * 2023 + $regression['intercept'];
-            $prediction2024 = $regression['slope'] * 2024 + $regression['intercept'];
-            $prediction2025 = $regression['slope'] * 2025 + $regression['intercept'];
-            $prediction2026 = $regression['slope'] * 2026 + $regression['intercept'];
+            foreach ($yearsToPredict as $year) {
+                $start = max(0, count($values) - $period);
+                $end = count($values);
+                $sum = array_sum(array_slice($values, $start, $end));
+                $average = $sum / $period;
 
-            $table["2022"] = number_format($prediction2022, 2);
-            $table["2023"] = number_format($prediction2023, 2);
-            $table["2024"] = number_format($prediction2024, 2);
-            $table["2025"] = number_format($prediction2025, 2);
-            $table["2026"] = number_format($prediction2026, 2);
+                $predictedValues[$year] = $average;
+                $item[$year] = number_format($average);
+                $values[] = $average;
+            }
+
+            $item = $item + $predictedValues;
         }
-
         return $data;
     }
 
