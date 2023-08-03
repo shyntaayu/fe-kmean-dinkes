@@ -131,35 +131,6 @@ class MainController
         return $errors;
     }
 
-    private function trial_Main()
-    {
-        $data = [
-            [2, 10],
-            [2, 5],
-            [8, 4],
-            [5, 8],
-            [7, 5],
-            [6, 4],
-            [1, 2],
-            [4, 9]
-        ];
-
-        $k = 2; // Number of clusters
-        $maxIterations = 100;
-
-        $kmeans = new KMeans($k, $maxIterations);
-        $clusters = $kmeans->fit($data);
-
-        // Output the resulting clusters
-        foreach ($clusters as $clusterIndex => $cluster) {
-            echo "Cluster " . ($clusterIndex + 1) . ": ";
-            foreach ($cluster as $point) {
-                echo "[" . implode(", ", $point) . "] ";
-            }
-            echo PHP_EOL;
-        }
-    }
-
     private function getKMeans($param)
     {
         $data = $this->objectToArrayPHP($param);
