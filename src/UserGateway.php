@@ -127,10 +127,25 @@ class UserGateway
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && password_verify($password, $user['password'])) {
-                return true;
+                $sql = "SELECT dp.user_id, dp.user_name, dp.email, dp.role_id, dp.daerah_id, p.role_name, d.daerah_name 
+                FROM user dp
+                LEFT JOIN role p ON dp.role_id = p.role_id
+               LEFT JOIN daerah d ON dp.daerah_id = d.daerah_id
+                 WHERE dp.user_id = :user_id";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bindValue(":user_id", $user["user_id"], PDO::PARAM_INT);
+                $stmt->execute();
+                $res = $stmt->fetch(PDO::FETCH_ASSOC);
+                return [
+                    'result' => true,
+                    'data' => $res,
+                ];
             }
 
-            return false;
+            return [
+                'result' => false,
+                'data' => [],
+            ];
         }
     }
 

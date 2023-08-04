@@ -25,14 +25,24 @@ class UserController
                     $json = file_get_contents("php://input");
                     $data = $this->objectToArrayPHP($json);
                     $result = $this->gateway->loginUser($data["username"], $data["password"]);
-                    if ($result) {
+                    if ($result["result"]) {
                         http_response_code(200);
-                        echo json_encode(array('success' => $result, 'message' => 'Login successful!'));
+                        echo json_encode(array('success' => $result["result"], 'message' => 'Login successful!', 'result' => $result["data"]));
                     } else {
                         http_response_code(500); // Internal Server Error
-                        echo json_encode(array('success' => $result, 'message' => 'Invalid username or password.'));
+                        echo json_encode(array('success' => $result["result"], 'message' => 'Invalid username or password.', 'result' => $result["data"]));
                     }
                     // echo json_encode($mapping);
+                } else if ($id == "createone") {
+                    $result = $this->gateway->createOne($_POST);
+
+                    if ($result) {
+                        http_response_code(201); // Created
+                        echo json_encode(["message" => "User created successfully", "id" => $result]);
+                    } else {
+                        http_response_code(500); // Internal Server Error
+                        echo json_encode(array('message' => 'Error created user.'));
+                    }
                 } else {
                     $user = $this->gateway->get($id);
                     if (!$user) {
@@ -58,9 +68,11 @@ class UserController
                 $rows = $this->gateway->delete($id);
                 echo json_encode(["message" => "User $id deleted", "rows" => $rows]);
                 break;
+            case "OPTIONS":
+                break;
             default:
                 http_response_code(405);
-                header("Allow: GET, POST,  DELETE");
+                header("Allow: GET, POST,  DELETE, OPTIONS");
         }
     }
     private function processCollectionRequest(string $method): void
@@ -89,9 +101,11 @@ class UserController
                     echo json_encode(array('message' => 'File upload failed.'));
                 }
                 break;
+            case "OPTIONS":
+                break;
             default:
                 http_response_code(405);
-                header("Allow:GET, POST");
+                header("Allow:GET, POST, OPTIONS");
         }
     }
 
