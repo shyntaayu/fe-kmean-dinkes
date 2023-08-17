@@ -173,7 +173,7 @@ class MainController
     {
         $sum = 0;
         foreach ($point1 as $key => $value) {
-            if ($key != 'daerah_name') {
+            if ($key != 'daerah_name' && $key != 'penyakit_name') {
                 $sum += pow($point1[$key] - $point2[$key], 2);
             }
         }
@@ -207,7 +207,7 @@ class MainController
             $centroid = array_fill_keys(array_keys($points[0]), 0);
             foreach ($points as $point) {
                 foreach ($point as $key => $value) {
-                    if ($key !== 'daerah_name') {
+                    if ($key !== 'daerah_name' && $key !== 'penyakit_name') {
                         $centroid[$key] += $value;
                     }
                 }

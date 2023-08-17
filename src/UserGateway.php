@@ -13,13 +13,14 @@ class UserGateway
 
     public function getAll(): array
     {
-        $sql = "SELECT dp.user_id, dp.user_name, dp.email, p.role_name, d.daerah_name 
+        $sql = "SELECT dp.user_id, dp.user_name, dp.email, dp.role_id, dp.daerah_id, p.role_name, d.daerah_name 
         FROM user dp
         JOIN role p ON dp.role_id = p.role_id
-        JOIN daerah d ON dp.daerah_id = d.daerah_id";
+        JOIN daerah d ON dp.daerah_id = d.daerah_id order by dp.user_id desc";
         $stmt = $this->conn->query($sql);
         $data = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row["password"] = 12345;
             $data[] = $row;
         }
         return $data;
@@ -101,9 +102,11 @@ class UserGateway
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(":user_name", $new["user_name"] ?? $current["user_name"], PDO::PARAM_STR);
         $stmt->bindValue(":email", $new["email"] ?? $current["email"], PDO::PARAM_STR);
-        $stmt->bindValue(":password", password_hash($new["password"], PASSWORD_BCRYPT) ?? $current["password"], PDO::PARAM_STR);
-        $stmt->bindValue(":daerah_id", $new["daerah_id"] ?? $current["daerah_id"], PDO::PARAM_STR);
-        $stmt->bindValue(":role_id", $new["role_id"] ?? $current["role_id"], PDO::PARAM_STR);
+        if (array_key_exists("password", $new))
+            $stmt->bindValue(":password", password_hash($new["password"], PASSWORD_BCRYPT) ?? $current["password"], PDO::PARAM_STR);
+        else $stmt->bindValue(":password", $current["password"], PDO::PARAM_STR);
+        $stmt->bindValue(":daerah_id", $new["daerah_id"] ?? $current["daerah_id"], PDO::PARAM_INT);
+        $stmt->bindValue(":role_id", $new["role_id"] ?? $current["role_id"], PDO::PARAM_INT);
         $stmt->bindValue(":user_id", $current["user_id"], PDO::PARAM_INT);
         $stmt->execute();
 

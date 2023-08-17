@@ -34,7 +34,9 @@ class UserController
                     }
                     // echo json_encode($mapping);
                 } else if ($id == "createone") {
-                    $result = $this->gateway->createOne($_POST);
+                    $json = file_get_contents("php://input");
+                    $data = $this->objectToArrayPHP($json);
+                    $result = $this->gateway->createOne($data);
 
                     if ($result) {
                         http_response_code(201); // Created
@@ -50,7 +52,8 @@ class UserController
                         echo json_encode(["message" => "User not found"]);
                         return;
                     } else {
-                        $data = $_POST;
+                        $json = file_get_contents("php://input");
+                        $data = $this->objectToArrayPHP($json);
                         $errors = $this->getValidationErrors($data, false);
 
                         if (!empty($errors)) {
@@ -58,15 +61,20 @@ class UserController
                             echo json_encode(["errors" => $errors]);
                             break;
                         }
-
-                        $rows = $this->gateway->update($user, $_POST);
-                        echo json_encode(["message" => "User $id updated", "rows" => $rows]);
+                        $rows = $this->gateway->update($user, $data);
+                        if ($rows) {
+                            http_response_code(200);
+                            echo json_encode(["message" => "User $id updated", "rows" => $rows]);
+                        }
                     }
                 }
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
-                echo json_encode(["message" => "User $id deleted", "rows" => $rows]);
+                if ($rows) {
+                    http_response_code(200);
+                    echo json_encode(["message" => "User $id deleted", "rows" => $rows]);
+                }
                 break;
             case "OPTIONS":
                 break;
