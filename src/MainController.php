@@ -24,11 +24,11 @@ class MainController
         switch ($method) {
             case "GET":
                 // var_dump($inputData);
-                $json = file_get_contents("php://input");
-                $data = $this->objectToArrayPHP($json);
-                $restructuredData = $this->prosesPrediksi($data);
-                echo json_encode($restructuredData);
-                break;
+                // $json = file_get_contents("php://input");
+                // $data = $this->objectToArrayPHP($json);
+                // $restructuredData = $this->prosesPrediksi($data);
+                // echo json_encode($restructuredData);
+                // break;
             case "POST":
                 if ($id == "clustering") {
                     $data = $_POST;
@@ -40,7 +40,7 @@ class MainController
                 } else if ($id == "prediksi") {
                     $json = file_get_contents("php://input");
                     $data = $this->objectToArrayPHP($json);
-                    $restructuredData = $this->prosesPrediksi($data);
+                    $restructuredData = $this->prosesPrediksi($data["data"], $data["tahunAwal"], $data["tahunAkhir"]);
                     echo json_encode($restructuredData);
                 }
                 // $errors = $this->getValidationErrors($data, false);
@@ -270,10 +270,10 @@ class MainController
         ];
     }
 
-    function prosesPrediksi($data)
+    function prosesPrediksi($data, $tahunAwal, $tahunAkhir)
     {
         // Predict values for 2022, 2023,dan 2024 menggunakan simple moving average
-        $yearsToPredict = [2022, 2023, 2024, 2025, 2026];
+        $yearsToPredict = range($tahunAwal, $tahunAkhir);
         $period = 5;
 
         foreach ($data as &$item) {
