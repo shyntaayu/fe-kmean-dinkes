@@ -26,7 +26,8 @@ class RoleController
                 echo json_encode($role);
                 break;
             case "POST":
-                $data = $_POST;
+                $json = file_get_contents("php://input");
+                $data = $this->objectToArrayPHP($json);
                 $errors = $this->getValidationErrors($data, false);
 
                 if (!empty($errors)) {
@@ -35,16 +36,18 @@ class RoleController
                     break;
                 }
 
-                $rows = $this->gateway->update($role, $_POST);
+                $rows = $this->gateway->update($role, $data);
                 echo json_encode(["message" => "Role $id updated", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
                 echo json_encode(["message" => "Role $id deleted", "rows" => $rows]);
                 break;
+            case "OPTIONS":
+                break;
             default:
                 http_response_code(405);
-                header("Allow: GET, POST,  DELETE");
+                header("Allow: GET, POST,  DELETE, OPTIONS");
         }
     }
     private function processCollectionRequest(string $method): void
@@ -54,9 +57,9 @@ class RoleController
                 echo json_encode($this->gateway->getAll());
                 break;
             case "POST":
-
                 // $data = (array) json_decode($_POST, true);
-                $data = $_POST;
+                $json = file_get_contents("php://input");
+                $data = $this->objectToArrayPHP($json);
                 $errors = $this->getValidationErrors($data);
 
                 if (!empty($errors)) {
@@ -65,14 +68,15 @@ class RoleController
                     break;
                 }
 
-                $id = $this->gateway->create($_POST);
-                http_response_code(201);
+                $id = $this->gateway->create($data);
+                http_response_code(201); // Created
                 echo json_encode(["message" => "Role created successfully", "id" => $id]);
                 break;
-
+            case "OPTIONS":
+                break;
             default:
                 http_response_code(405);
-                header("Allow:GET, POST");
+                header("Allow:GET, POST, OPTIONS");
         }
     }
 
@@ -89,5 +93,11 @@ class RoleController
             }
         }
         return $errors;
+    }
+
+    function objectToArrayPHP($param)
+    {
+        $data = json_decode($param, true);
+        return $data;
     }
 }
