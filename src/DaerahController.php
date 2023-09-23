@@ -26,7 +26,8 @@ class DaerahController
                 echo json_encode($daerah);
                 break;
             case "POST":
-                $data = $_POST;
+                $json = file_get_contents("php://input");
+                $data = $this->objectToArrayPHP($json);
                 $errors = $this->getValidationErrors($data, false);
 
                 if (!empty($errors)) {
@@ -35,16 +36,18 @@ class DaerahController
                     break;
                 }
 
-                $rows = $this->gateway->update($daerah, $_POST);
+                $rows = $this->gateway->update($daerah, $data);
                 echo json_encode(["message" => "Daerah $id updated", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
                 echo json_encode(["message" => "Daerah $id deleted", "rows" => $rows]);
                 break;
+            case "OPTIONS":
+                break;
             default:
                 http_response_code(405);
-                header("Allow: GET, POST,  DELETE");
+                header("Allow: GET, POST,  DELETE,OPTIONS");
         }
     }
     private function processCollectionRequest(string $method): void
@@ -54,10 +57,9 @@ class DaerahController
                 echo json_encode($this->gateway->getAll());
                 break;
             case "POST":
-
-                // $data = (array) json_decode($_POST, true);
-                $data = $_POST;
-                $errors = $this->getValidationErrors($data);
+                $json = file_get_contents("php://input");
+                $data = $this->objectToArrayPHP($json);
+                $errors = $this->getValidationErrors($data, false);
 
                 if (!empty($errors)) {
                     http_response_code(422);
@@ -65,14 +67,16 @@ class DaerahController
                     break;
                 }
 
-                $id = $this->gateway->create($_POST);
+                $id = $this->gateway->create($data);
                 http_response_code(201);
                 echo json_encode(["message" => "Daerah created successfully", "id" => $id]);
+                break;
+            case "OPTIONS":
                 break;
 
             default:
                 http_response_code(405);
-                header("Allow:GET, POST");
+                header("Allow:GET, POST,OPTIONS");
         }
     }
 
@@ -89,5 +93,10 @@ class DaerahController
             }
         }
         return $errors;
+    }
+    function objectToArrayPHP($param)
+    {
+        $data = json_decode($param, true);
+        return $data;
     }
 }
