@@ -18,7 +18,7 @@ class PenyakitController
         $penyakit = $this->gateway->get($id);
         if (!$penyakit) {
             http_response_code(404);
-            echo json_encode(["message" => "Penyakit not found"]);
+            echo json_encode(["message" => "Penyakit tidak ditemukan"]);
             return;
         }
         switch ($method) {
@@ -36,11 +36,11 @@ class PenyakitController
                 }
 
                 $rows = $this->gateway->update($penyakit, $data);
-                echo json_encode(["message" => "Penyakit $id updated", "rows" => $rows]);
+                echo json_encode(["message" => "Penyakit $id diperbarui", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
-                echo json_encode(["message" => "Penyakit $id deleted", "rows" => $rows]);
+                echo json_encode(["message" => "Penyakit $id terhapus", "rows" => $rows]);
                 break;
             case "OPTIONS":
                 break;
@@ -68,7 +68,7 @@ class PenyakitController
 
                 $id = $this->gateway->create($data);
                 http_response_code(201);
-                echo json_encode(["message" => "Penyakit created successfully", "id" => $id]);
+                echo json_encode(["message" => "Penyakit berhasil dibuat", "id" => $id]);
                 break;
             case "OPTIONS":
                 break;
@@ -82,12 +82,12 @@ class PenyakitController
     {
         $errors = [];
         if ($is_new && empty($data["penyakit_name"])) {
-            $errors[] = "penyakit_name is required";
+            $errors[] = "penyakit_name diperlukan";
         }
 
         if (array_key_exists("size", $data)) {
             if (filter_var($data["size"], FILTER_VALIDATE_INT) === false) {
-                $errors[] = "penyakit_size must be an integer";
+                $errors[] = "penyakit_size harus berupa integer";
             }
         }
         return $errors;

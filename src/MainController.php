@@ -18,7 +18,7 @@ class MainController
         // $main = $this->gateway->get($id);
         // if (!$main) {
         //     http_response_code(404);
-        //     echo json_encode(["message" => "Main not found"]);
+        //     echo json_encode(["message" => "Main tidak ditemukan"]);
         //     return;
         // }
         switch ($method) {
@@ -48,10 +48,22 @@ class MainController
                     $result = $this->gateway->createSingle($data);
                     if ($result["result"]) {
                         http_response_code(201); // Created
-                        echo json_encode(array('message' => 'Data created successfully.', 'data' => $result['insertedData']));
+                        echo json_encode(array('message' => 'Data berhasil dibuat.', 'data' => $result['insertedData']));
                     } else {
                         http_response_code(500); // Internal Server Error
-                        echo json_encode(array('message' => 'Error created data.', 'error' => $result['message']));
+                        echo json_encode(array('message' => 'Kesalahan membuat data.', 'error' => $result['message']));
+                    }
+                    break;
+                } else if ($id == "createmulti") {
+                    $json = file_get_contents("php://input");
+                    $data = $this->objectToArrayPHP($json);
+                    $result = $this->gateway->createMulti($data);
+                    if ($result["result"]) {
+                        http_response_code(201); // Created
+                        echo json_encode(array('message' => 'Data berhasil dibuat.', 'data' => $result['insertedData']));
+                    } else {
+                        http_response_code(500); // Internal Server Error
+                        echo json_encode(array('message' => 'Kesalahan membuat data.', 'error' => $result['message']));
                     }
                     break;
                 }
@@ -64,11 +76,11 @@ class MainController
                 // }
 
                 // $rows = $this->gateway->update($main, $_POST);
-                // echo json_encode(["message" => "Main $id updated", "rows" => $rows]);
+                // echo json_encode(["message" => "Main $id diperbarui", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
-                echo json_encode(["message" => "Main $id deleted", "rows" => $rows]);
+                echo json_encode(["message" => "Main $id terhapus", "rows" => $rows]);
                 break;
             case "OPTIONS":
                 break;
@@ -109,14 +121,14 @@ class MainController
 
                     if ($result["result"]) {
                         http_response_code(201); // Created
-                        echo json_encode(array('message' => 'Data created successfully.', 'data' => $result['insertedData']));
+                        echo json_encode(array('message' => 'Data berhasil dibuat.', 'data' => $result['insertedData']));
                     } else {
                         http_response_code(500); // Internal Server Error
-                        echo json_encode(array('message' => 'Error processing the Excel file.', 'error' => $result['message']));
+                        echo json_encode(array('message' => 'Kesalahan saat memproses file Excel.', 'error' => $result['message']));
                     }
                 } else {
                     http_response_code(400); // Bad Request
-                    echo json_encode(array('message' => 'File upload failed.'));
+                    echo json_encode(array('message' => 'Pengunggahan file gagal.'));
                 }
                 break;
             case "OPTIONS":
@@ -131,14 +143,14 @@ class MainController
     {
         $errors = [];
         if (empty($data["pilihan"])) {
-            $errors[] = "pilihan is required";
+            $errors[] = "pilihan diperlukan";
         }
 
         if (empty($data["baris"])) {
-            $errors[] = "baris is required";
+            $errors[] = "baris diperlukan";
         }
         if (empty($data["kolom"])) {
-            $errors[] = "kolom is required";
+            $errors[] = "kolom diperlukan";
         }
         return $errors;
     }

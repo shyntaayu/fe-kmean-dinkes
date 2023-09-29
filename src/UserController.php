@@ -27,10 +27,10 @@ class UserController
                     $result = $this->gateway->loginUser($data["username"], $data["password"]);
                     if ($result["result"]) {
                         http_response_code(200);
-                        echo json_encode(array('success' => $result["result"], 'message' => 'Login successful!', 'result' => $result["data"]));
+                        echo json_encode(array('success' => $result["result"], 'message' => 'Login berhasil!', 'result' => $result["data"]));
                     } else {
                         http_response_code(500); // Internal Server Error
-                        echo json_encode(array('success' => $result["result"], 'message' => 'Invalid username or password.', 'result' => $result["data"]));
+                        echo json_encode(array('success' => $result["result"], 'message' => 'Username atau password tidak valid.', 'result' => $result["data"]));
                     }
                     // echo json_encode($mapping);
                 } else if ($id == "createone") {
@@ -40,16 +40,16 @@ class UserController
 
                     if ($result) {
                         http_response_code(201); // Created
-                        echo json_encode(["message" => "User created successfully", "id" => $result]);
+                        echo json_encode(["message" => "User berhasil dibuat", "id" => $result]);
                     } else {
                         http_response_code(500); // Internal Server Error
-                        echo json_encode(array('message' => 'Error created user.'));
+                        echo json_encode(array('message' => 'Kesalahan membuat user.'));
                     }
                 } else {
                     $user = $this->gateway->get($id);
                     if (!$user) {
                         http_response_code(404);
-                        echo json_encode(["message" => "User not found"]);
+                        echo json_encode(["message" => "tidak ditemukan"]);
                         return;
                     } else {
                         $json = file_get_contents("php://input");
@@ -64,7 +64,7 @@ class UserController
                         $rows = $this->gateway->update($user, $data);
                         if ($rows) {
                             http_response_code(200);
-                            echo json_encode(["message" => "User $id updated", "rows" => $rows]);
+                            echo json_encode(["message" => "User $id diperbarui", "rows" => $rows]);
                         }
                     }
                 }
@@ -73,7 +73,7 @@ class UserController
                 $rows = $this->gateway->delete($id);
                 if ($rows) {
                     http_response_code(200);
-                    echo json_encode(["message" => "User $id deleted", "rows" => $rows]);
+                    echo json_encode(["message" => "User $id terhapus", "rows" => $rows]);
                 }
                 break;
             case "OPTIONS":
@@ -99,14 +99,14 @@ class UserController
 
                     if ($result["result"]) {
                         http_response_code(201); // Created
-                        echo json_encode(array('message' => 'Data created successfully.', 'data' => $result['insertedData']));
+                        echo json_encode(array('message' => 'Data berhasil dibuat.', 'data' => $result['insertedData']));
                     } else {
                         http_response_code(500); // Internal Server Error
-                        echo json_encode(array('message' => 'Error processing the Excel file.', 'error' => $result['message']));
+                        echo json_encode(array('message' => 'Kesalahan saat memproses file Excel.', 'error' => $result['message']));
                     }
                 } else {
                     http_response_code(400); // Bad Request
-                    echo json_encode(array('message' => 'File upload failed.'));
+                    echo json_encode(array('message' => 'Pengunggahan file gagal.'));
                 }
                 break;
             case "OPTIONS":
@@ -121,12 +121,12 @@ class UserController
     {
         $errors = [];
         if ($is_new && empty($data["user_name"])) {
-            $errors[] = "user_name is required";
+            $errors[] = "user_name diperlukan";
         }
 
         if (array_key_exists("size", $data)) {
             if (filter_var($data["size"], FILTER_VALIDATE_INT) === false) {
-                $errors[] = "user_size must be an integer";
+                $errors[] = "user_size harus berupa integer";
             }
         }
         return $errors;

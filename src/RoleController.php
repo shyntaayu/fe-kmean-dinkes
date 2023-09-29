@@ -18,7 +18,7 @@ class RoleController
         $role = $this->gateway->get($id);
         if (!$role) {
             http_response_code(404);
-            echo json_encode(["message" => "Role not found"]);
+            echo json_encode(["message" => "Role tidak ditemukan"]);
             return;
         }
         switch ($method) {
@@ -37,11 +37,11 @@ class RoleController
                 }
 
                 $rows = $this->gateway->update($role, $data);
-                echo json_encode(["message" => "Role $id updated", "rows" => $rows]);
+                echo json_encode(["message" => "Role $id diperbarui", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
-                echo json_encode(["message" => "Role $id deleted", "rows" => $rows]);
+                echo json_encode(["message" => "Role $id terhapus", "rows" => $rows]);
                 break;
             case "OPTIONS":
                 break;
@@ -70,7 +70,7 @@ class RoleController
 
                 $id = $this->gateway->create($data);
                 http_response_code(201); // Created
-                echo json_encode(["message" => "Role created successfully", "id" => $id]);
+                echo json_encode(["message" => "Role berhasil dibuat", "id" => $id]);
                 break;
             case "OPTIONS":
                 break;
@@ -84,12 +84,12 @@ class RoleController
     {
         $errors = [];
         if ($is_new && empty($data["role_name"])) {
-            $errors[] = "role_name is required";
+            $errors[] = "role_name diperlukan";
         }
 
         if (array_key_exists("size", $data)) {
             if (filter_var($data["size"], FILTER_VALIDATE_INT) === false) {
-                $errors[] = "role_size must be an integer";
+                $errors[] = "role_size harus berupa integer";
             }
         }
         return $errors;

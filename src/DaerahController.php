@@ -18,7 +18,7 @@ class DaerahController
         $daerah = $this->gateway->get($id);
         if (!$daerah) {
             http_response_code(404);
-            echo json_encode(["message" => "Daerah not found"]);
+            echo json_encode(["message" => "Daerah tidak ditemukan"]);
             return;
         }
         switch ($method) {
@@ -37,11 +37,11 @@ class DaerahController
                 }
 
                 $rows = $this->gateway->update($daerah, $data);
-                echo json_encode(["message" => "Daerah $id updated", "rows" => $rows]);
+                echo json_encode(["message" => "Daerah $id diperbarui", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
-                echo json_encode(["message" => "Daerah $id deleted", "rows" => $rows]);
+                echo json_encode(["message" => "Daerah $id terhapus", "rows" => $rows]);
                 break;
             case "OPTIONS":
                 break;
@@ -69,7 +69,7 @@ class DaerahController
 
                 $id = $this->gateway->create($data);
                 http_response_code(201);
-                echo json_encode(["message" => "Daerah created successfully", "id" => $id]);
+                echo json_encode(["message" => "Daerah berhasil dibuat", "id" => $id]);
                 break;
             case "OPTIONS":
                 break;
@@ -84,12 +84,12 @@ class DaerahController
     {
         $errors = [];
         if ($is_new && empty($data["daerah_name"])) {
-            $errors[] = "daerah_name is required";
+            $errors[] = "daerah_name diperlukan";
         }
 
         if (array_key_exists("size", $data)) {
             if (filter_var($data["size"], FILTER_VALIDATE_INT) === false) {
-                $errors[] = "daerah_size must be an integer";
+                $errors[] = "daerah_size harus berupa integer";
             }
         }
         return $errors;

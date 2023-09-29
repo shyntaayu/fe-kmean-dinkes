@@ -18,7 +18,7 @@ class TahunController
         $tahun = $this->gateway->get($id);
         if (!$tahun) {
             http_response_code(404);
-            echo json_encode(["message" => "Tahun not found"]);
+            echo json_encode(["message" => "Tahun tidak ditemukan"]);
             return;
         }
         switch ($method) {
@@ -36,11 +36,11 @@ class TahunController
                 }
 
                 $rows = $this->gateway->update($tahun, $_POST);
-                echo json_encode(["message" => "Tahun $id updated", "rows" => $rows]);
+                echo json_encode(["message" => "Tahun $id diperbarui", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
-                echo json_encode(["message" => "Tahun $id deleted", "rows" => $rows]);
+                echo json_encode(["message" => "Tahun $id terhapus", "rows" => $rows]);
                 break;
             default:
                 http_response_code(405);
@@ -67,7 +67,7 @@ class TahunController
 
                 $id = $this->gateway->create($_POST);
                 http_response_code(201);
-                echo json_encode(["message" => "Tahun created successfully", "id" => $id]);
+                echo json_encode(["message" => "Tahun berhasil dibuat", "id" => $id]);
                 break;
 
             default:
@@ -80,12 +80,12 @@ class TahunController
     {
         $errors = [];
         if ($is_new && empty($data["tahun_name"])) {
-            $errors[] = "tahun_name is required";
+            $errors[] = "tahun_name diperlukan";
         }
 
         if (array_key_exists("size", $data)) {
             if (filter_var($data["size"], FILTER_VALIDATE_INT) === false) {
-                $errors[] = "tahun_size must be an integer";
+                $errors[] = "tahun_size harus berupa integer";
             }
         }
         return $errors;

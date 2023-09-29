@@ -18,7 +18,7 @@ class PendudukController
         $daerah = $this->gateway->get($id);
         if (!$daerah) {
             http_response_code(404);
-            echo json_encode(["message" => "Penduduk not found"]);
+            echo json_encode(["message" => "Penduduk tidak ditemukan"]);
             return;
         }
         switch ($method) {
@@ -36,11 +36,11 @@ class PendudukController
                 }
 
                 $rows = $this->gateway->update($daerah, $_POST);
-                echo json_encode(["message" => "Penduduk $id updated", "rows" => $rows]);
+                echo json_encode(["message" => "Penduduk $id diperbarui", "rows" => $rows]);
                 break;
             case "DELETE":
                 $rows = $this->gateway->delete($id);
-                echo json_encode(["message" => "Penduduk $id deleted", "rows" => $rows]);
+                echo json_encode(["message" => "Penduduk $id terhapus", "rows" => $rows]);
                 break;
             default:
                 http_response_code(405);
@@ -64,14 +64,14 @@ class PendudukController
 
                     if ($result["result"]) {
                         http_response_code(201); // Created
-                        echo json_encode(array('message' => 'Data created successfully.', 'data' => $result['insertedData']));
+                        echo json_encode(array('message' => 'Data berhasil dibuat.', 'data' => $result['insertedData']));
                     } else {
                         http_response_code(500); // Internal Server Error
-                        echo json_encode(array('message' => 'Error processing the Excel file.', 'error' => $result['message']));
+                        echo json_encode(array('message' => 'Kesalahan saat memproses file Excel.', 'error' => $result['message']));
                     }
                 } else {
                     http_response_code(400); // Bad Request
-                    echo json_encode(array('message' => 'File upload failed.'));
+                    echo json_encode(array('message' => 'Pengunggahan file gagal.'));
                 }
 
             default:
@@ -84,12 +84,12 @@ class PendudukController
     {
         $errors = [];
         if ($is_new && empty($data["daerah_name"])) {
-            $errors[] = "daerah_name is required";
+            $errors[] = "daerah_name diperlukan";
         }
 
         if (array_key_exists("size", $data)) {
             if (filter_var($data["size"], FILTER_VALIDATE_INT) === false) {
-                $errors[] = "daerah_size must be an integer";
+                $errors[] = "daerah_size harus berupa integer";
             }
         }
         return $errors;

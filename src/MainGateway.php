@@ -81,46 +81,28 @@ class MainGateway
         }
     }
 
-    public function createMulti(array $data, $filePath): array
+    public function createMulti(array $data): array
     {
         try {
-            // Load the Excel file
-            $spreadsheet = IOFactory::load($filePath);
-            $worksheet = $spreadsheet->getActiveSheet();
-
-            // Get the highest row and column indices
-            $highestRow = $worksheet->getHighestRow();
-            $highestColumn = $worksheet->getHighestColumn();
-            $columnIndexes = range('A', $highestColumn);
             // Prepare the database query
             $query = "INSERT INTO daerah_penyakit (tahun,jumlah, penyakit_id, daerah_id) 
-            VALUES (:tahun,:jumlah,
-            (SELECT penyakit_id FROM penyakit WHERE penyakit_name=:penyakit_name), 
+            VALUES (:tahun,:jumlah,:penyakit_id, 
             (SELECT daerah_id FROM daerah WHERE daerah_name=:daerah_name)
             );";
             $stmt = $this->conn->prepare($query);
 
             $jml = 0;
             // Iterate over the rows and insert data into the database
-            for ($row = 2; $row <= $highestRow; $row++) { // Assuming the data starts from the second row
-                $rowData = [];
-
-                foreach ($columnIndexes as $columnIndex) {
-                    $cellValue = $worksheet->getCell($columnIndex . $row)->getValue();
-                    // Check if the cell value is not null
-                    if (!is_null($cellValue) || !empty($cellValue)) {
-                        $rowData[] = $cellValue;
-                    }
-                }
+            foreach ($data as $row) {
 
                 // Execute the database insert query if rowData is not empty
-                if (!empty($rowData)) {
+                if (!empty($row)) {
                     $jml++;
                     // Execute the database insert query
-                    $stmt->bindValue(":tahun", $data["tahun"], PDO::PARAM_STR);
-                    $stmt->bindValue(":jumlah", $rowData[1], PDO::PARAM_INT);
-                    $stmt->bindValue(":penyakit_name", $data["penyakit_name"], PDO::PARAM_STR);
-                    $stmt->bindValue(":daerah_name", $rowData[0], PDO::PARAM_STR);
+                    $stmt->bindValue(":tahun", $row["tahun"], PDO::PARAM_STR);
+                    $stmt->bindValue(":jumlah", $row["jumlah"], PDO::PARAM_INT);
+                    $stmt->bindValue(":penyakit_id", $row["penyakit"], PDO::PARAM_STR);
+                    $stmt->bindValue(":daerah_name", $row["daerah_name"], PDO::PARAM_STR);
                     $stmt->execute();
                 }
             }
