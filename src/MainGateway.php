@@ -81,6 +81,94 @@ class MainGateway
         }
     }
 
+    public function createMulti(array $data, $filePath): array
+    {
+        try {
+            // Load the Excel file
+            $spreadsheet = IOFactory::load($filePath);
+            $worksheet = $spreadsheet->getActiveSheet();
+
+            // Get the highest row and column indices
+            $highestRow = $worksheet->getHighestRow();
+            $highestColumn = $worksheet->getHighestColumn();
+            $columnIndexes = range('A', $highestColumn);
+            // Prepare the database query
+            $query = "INSERT INTO daerah_penyakit (tahun,jumlah, penyakit_id, daerah_id) 
+            VALUES (:tahun,:jumlah,
+            (SELECT penyakit_id FROM penyakit WHERE penyakit_name=:penyakit_name), 
+            (SELECT daerah_id FROM daerah WHERE daerah_name=:daerah_name)
+            );";
+            $stmt = $this->conn->prepare($query);
+
+            $jml = 0;
+            // Iterate over the rows and insert data into the database
+            for ($row = 2; $row <= $highestRow; $row++) { // Assuming the data starts from the second row
+                $rowData = [];
+
+                foreach ($columnIndexes as $columnIndex) {
+                    $cellValue = $worksheet->getCell($columnIndex . $row)->getValue();
+                    // Check if the cell value is not null
+                    if (!is_null($cellValue) || !empty($cellValue)) {
+                        $rowData[] = $cellValue;
+                    }
+                }
+
+                // Execute the database insert query if rowData is not empty
+                if (!empty($rowData)) {
+                    $jml++;
+                    // Execute the database insert query
+                    $stmt->bindValue(":tahun", $data["tahun"], PDO::PARAM_STR);
+                    $stmt->bindValue(":jumlah", $rowData[1], PDO::PARAM_INT);
+                    $stmt->bindValue(":penyakit_name", $data["penyakit_name"], PDO::PARAM_STR);
+                    $stmt->bindValue(":daerah_name", $rowData[0], PDO::PARAM_STR);
+                    $stmt->execute();
+                }
+            }
+
+            // Close the statement and perform any additional cleanup
+
+            // Return true on success
+            return [
+                'result' => true,
+                'insertedData' => $jml
+            ];
+        } catch (Exception $e) {
+            // Return false on error
+            return [
+                'result' => false,
+                'insertedData' => 0, 'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function createSingle(array $data): array
+    {
+        try {
+            // Prepare the database query
+            $query = "INSERT INTO daerah_penyakit (tahun,jumlah, penyakit_id, daerah_id) VALUES (:tahun,:jumlah,:penyakit_id,:daerah_id);";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(":tahun", $data["tahun"], PDO::PARAM_INT);
+            $stmt->bindValue(":jumlah", $data["jumlah"], PDO::PARAM_INT);
+            $stmt->bindValue(":penyakit_id", $data["penyakit"], PDO::PARAM_INT);
+            $stmt->bindValue(":daerah_id", $data["daerah_id"], PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Close the statement and perform any additional cleanup
+
+            // Return true on success
+            return [
+                'result' => true,
+                'insertedData' => $this->conn->lastInsertId()
+            ];
+        } catch (Exception $e) {
+            // Return false on error
+            return [
+                'result' => false,
+                'insertedData' => 0, 'message' => $e->getMessage()
+            ];
+        }
+    }
+
     public function get(string $id): array|false
     {
         $sql = "SELECT * FROM daerah_penyakit WHERE main_id =:id";

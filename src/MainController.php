@@ -42,6 +42,18 @@ class MainController
                     $data = $this->objectToArrayPHP($json);
                     $restructuredData = $this->prosesPrediksi($data["data"], $data["tahunAwal"], $data["tahunAkhir"]);
                     echo json_encode($restructuredData);
+                } else if ($id == "createsingle") {
+                    $json = file_get_contents("php://input");
+                    $data = $this->objectToArrayPHP($json);
+                    $result = $this->gateway->createSingle($data);
+                    if ($result["result"]) {
+                        http_response_code(201); // Created
+                        echo json_encode(array('message' => 'Data created successfully.', 'data' => $result['insertedData']));
+                    } else {
+                        http_response_code(500); // Internal Server Error
+                        echo json_encode(array('message' => 'Error created data.', 'error' => $result['message']));
+                    }
+                    break;
                 }
                 // $errors = $this->getValidationErrors($data, false);
 
