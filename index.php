@@ -7,7 +7,7 @@ spl_autoload_register(function ($class) {
 });
 
 
-require 'vendor/autoload.php';
+// require 'vendor/autoload.php';
 
 set_error_handler("ErrorHandler::handleError");
 set_exception_handler("ErrorHandler::handleException");

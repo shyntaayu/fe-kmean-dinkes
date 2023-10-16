@@ -34,9 +34,12 @@ class MainController
                     $data = $_POST;
                     $json = file_get_contents("php://input");
                     $restructuredData = $this->getKMeans($json);
-                    $mapping = $this->mappingColor($restructuredData);
-                    // var_dump();
-                    echo json_encode($mapping);
+                    $mapping = $this->mappingColor($restructuredData["data"]);
+                    $res = [
+                        'iterations' => $restructuredData['iterations'],
+                        'data' => $mapping
+                    ];
+                    echo json_encode($res);
                 } else if ($id == "prediksi") {
                     $json = file_get_contents("php://input");
                     $data = $this->objectToArrayPHP($json);
@@ -158,7 +161,7 @@ class MainController
     private function getKMeans($param)
     {
         $data = $this->objectToArrayPHP($param);
-
+        // var_dump($data);
         if (is_array($data)) {
             // Data is an array, proceed with K-means calculation
             // Your K-means logic goes here
@@ -171,15 +174,17 @@ class MainController
             //     // Access other elements as needed
             // }
             $restructuredData = [];
-            foreach ($result as $cluster => $clusterData) {
+            foreach ($result["clusters"] as $cluster => $clusterData) {
                 foreach ($clusterData as $index => $row) {
                     $restructuredRow = $row;
                     $restructuredRow["cluster"] = (string) $cluster;
                     $restructuredData[] = $restructuredRow;
                 }
             }
-
-            return $restructuredData;
+            return [
+                'iterations' => $result['iterations'],
+                'data' => $restructuredData
+            ];
         } else {
             // Data is not an array, handle the error
             echo "Invalid JSON data";
@@ -197,6 +202,9 @@ class MainController
     {
         $sum = 0;
         foreach ($point1 as $key => $value) {
+            // var_dump($point1);
+            // var_dump($point2);
+            // var_dump($key);
             if ($key != 'daerah_name' && $key != 'penyakit_name') {
                 $sum += pow($point1[$key] - $point2[$key], 2);
             }
@@ -210,7 +218,7 @@ class MainController
         $clusters = [];
         foreach ($data as $point) {
             $minDistance = PHP_INT_MAX;
-            $assignedCluster = null;
+            $assignedCluster = 0;
             foreach ($centroids as $cluster => $centroid) {
                 $distance = $this->euclideanDistance($point, $centroid);
                 if ($distance < $minDistance) {
@@ -248,21 +256,106 @@ class MainController
     // Function to perform K-means clustering
     function kmeans($data, $k, $maxIterations = 100)
     {
-        // Initialize centroids randomly
-        $centroids = array_slice($data, 0, $k);
+        // Langkah 1: Inisialisasi centroid secara acak
+        // $centroids = array();
+        // shuffle($data); // Acak urutan data
+        // for ($i = 0; $i < $k; $i++) {
+        //     $centroids[] = $data[$i];
+        // }
+        // $centroids = array_slice($data, 0, $k);
+        // // $out = array_values($centroids);
 
-        for ($i = 0; $i < $maxIterations; $i++) {
-            $clusters = $this->assignToClusters($data, $centroids);
-            $newCentroids = $this->calculateCentroids($clusters);
+        // // var_dump(json_encode($out));
+        // // $arJson = json_encode($centroids, true);
+        // // var_dump($arJson[0]);
 
-            // Check for convergence
-            if ($centroids == $newCentroids) {
-                break;
+        // for ($i = 0; $i < $maxIterations; $i++) {
+        //     $clusters = $this->assignToClusters($data, $centroids);
+        //     $newCentroids = $this->calculateCentroids($clusters);
+
+        //     // Check for convergence
+        //     if ($centroids == $newCentroids) {
+        //         break;
+        //     }
+
+        //     $centroids = $newCentroids;
+        // }
+
+        // Jumlah cluster (k)
+        $k = 3;
+
+        // Langkah 1: Inisialisasi centroid secara acak
+        $centroids = array();
+        shuffle($data); // Acak urutan data
+        for ($i = 0; $i < $k; $i++) {
+            $centroids[] = $data[$i];
+        }
+        $convergenceThreshold = 0.0001;
+        // Langkah iterasi
+        $iterations = 0;
+        do {
+            // Langkah 2: Mengelompokkan titik data ke centroid terdekat
+            $clusters = array_fill(0, $k, array());
+
+            foreach ($data as $point) {
+                $minDistance = PHP_INT_MAX;
+                $closestCentroid = 0;
+
+                foreach ($centroids as $key => $centroid) {
+                    $distance = $this->euclideanDistance($point, $centroid);
+
+                    if ($distance < $minDistance) {
+                        $minDistance = $distance;
+                        $closestCentroid = $key;
+                    }
+                }
+
+                $clusters[$closestCentroid][] = $point;
             }
 
-            $centroids = $newCentroids;
-        }
-        return $clusters;
+            // Langkah 3: Menghitung ulang centroid untuk setiap cluster
+            $maxShift = 0;
+            foreach ($clusters as $key => $cluster) {
+                $clusterSize = count($cluster);
+                if ($clusterSize > 0)
+                    $newCentroid = $cluster[0];
+
+                if ($clusterSize > 1) {
+                    for ($i = 1; $i < $clusterSize; $i++) {
+                        foreach ($newCentroid as $attribute => $value) {
+                            if ($attribute !== 'daerah_name' && $attribute !== "penyakit_name") {
+                                $newCentroid[$attribute] += $cluster[$i][$attribute];
+                            }
+                        }
+                    }
+
+                    foreach ($newCentroid as $attribute => $value) {
+                        if ($attribute !== 'daerah_name' && $attribute !== "penyakit_name") {
+                            $newCentroid[$attribute] /= $clusterSize;
+                        }
+                    }
+                }
+
+                // Hitung perubahan posisi centroid
+                $shift = $this->euclideanDistance($centroids[$key], $newCentroid);
+                $maxShift = max($maxShift, $shift);
+                // var_dump($maxShift);
+                // var_dump($convergenceThreshold);
+                $centroids[$key] = $newCentroid;
+            }
+
+            $iterations++;
+
+            // Ulangi iterasi sampai perubahan maksimum posisi centroid kurang dari ambang batas
+        } while ($maxShift > $convergenceThreshold);
+
+        // Lanjutkan langkah-langkah di atas untuk beberapa iterasi sampai konvergensi
+
+        // Hasil akhir
+        return [
+            'iterations' => $iterations,
+            'clusters' => $clusters
+        ];
     }
 
     function objectToArrayPHP($param)
